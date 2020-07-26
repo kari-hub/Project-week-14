@@ -1,0 +1,523 @@
+---
+output: 
+  html_document: 
+    toc: yes
+---
+
+
+## Defining the question
+You are a Data analyst at Carrefour Kenya and are currently undertaking a project that will inform the marketing department on the most relevant marketing strategies that will result in the highest no. of sales (total price including tax). Your project has been divided into four parts where you'll explore a recent marketing dataset by performing various unsupervised learning techniques and later providing recommendations based on your insights.
+
+
+### a) Specifying the question
+
+
+### b) Defining the metric of success
+Our metrics of success is to be able to carry out comprehensive Dimensionality reduction and feature reduction in our data.
+
+### c) Understanding the context
+The context is using data provided by the company to carry out Dimensionality reduction through PCA and other ways to get meaningful insights and conclusions from advertising data.
+
+### d) Recording the experimental design
+This involves:
+a. Cleaning
+   i). Removing anomalies in the data
+  ii). Finding and dealing with missing data
+ iii). Dealing with duplicated rows in the data
+ 
+b. Exploratory Data Analysis
+   i). Univariate analysis
+  ii). Bivariate analysis
+ iii). Multivariate analysis 
+ 
+c. Dimensionality Reduction
+   i). PCA  
+
+d. Feature Reduction
+   i). Filter method
+
+### e) Data Relevance
+Our data is relevant to the analysis intended to be carried out and has the required information.
+
+## Reading the data
+```{r}
+# We will first load our libraries
+library("data.table")
+library(readr)
+library(devtools)
+library(clustvarsel)
+library(mclust)
+library(ggbiplot)
+library(caret)
+library(corrplot)
+
+```
+
+```{r}
+# Loading our dataset
+
+sale1 <- read_csv("Supermarket_Dataset_1 - Sales Data.csv")
+
+
+```
+
+```{r}
+
+# Reading our column names
+
+names(sale1)
+
+
+```
+
+
+## Checking the data
+```{r}
+# Previewing the top of our data
+sale1 <- as.data.frame(sale1)
+head(sale1)
+
+# Previewing the bottom of out dataset
+
+tail(sale1)
+```
+
+```{r}
+# Checking the shape of our data
+dim(sale1)
+
+```
+
+```{r}
+# Determining the summary of our data
+summary(sale1)
+
+```
+```{r}
+# Checking the structure of the data
+str(sale1)
+
+```
+
+## Tidying the dataset
+```{r}
+# Checking for any missing values
+
+is.na(sale1)
+```
+```{r}
+# Counting the number of missing values
+
+colSums(is.na(sale1))
+
+```
+#### We have confirmed that there are no missing values in our data
+
+
+```{r}
+# Checking for any duplicates in our data
+
+Duplicate <- sale1[duplicated(sale1),]
+Duplicate
+
+# There are no duplicated values in our data
+```
+
+
+```{r}
+## Assigning the variables to a single name for simplicity
+
+invoice <- sale1$`Invoice ID`
+branch <- sale1$Branch
+ctype <- sale1$`Customer type`
+gen <- sale1$Gender
+pline <- sale1$`Product line`
+price <- sale1$`Unit price`
+quantity <- sale1$Quantity
+tax <- sale1$Tax
+date <- sale1$Date
+time <- sale1$Time
+pay <- sale1$Payment
+cogs <- sale1$cogs
+gmp <- sale1$`gross margin percentage`
+income <- sale1$`gross income`
+rating <- sale1$Rating
+total <- sale1$Total
+
+```
+
+### Checking for outliers in our variables
+
+```{r}
+
+boxplot(price)
+```
+
+```{r}
+boxplot(quantity)
+```
+
+```{r}
+
+boxplot(tax)
+```
+
+```{r}
+
+boxplot(time)
+```
+
+```{r}
+
+boxplot(cogs)
+```
+
+
+```{r}
+
+boxplot(gmp)
+```
+
+
+```{r}
+
+boxplot(income)
+```
+
+
+```{r}
+
+boxplot(rating)
+```
+
+```{r}
+boxplot(total)
+```
+
+
+#### From out analysis, we have identified only four columns with outliers. We will now drop the outliers
+
+```{r}
+
+boxplot.stats(tax)$out
+
+```
+
+
+```{r}
+
+boxplot.stats(cogs)$out
+
+
+```
+
+
+```{r}
+
+boxplot.stats(income)$out
+
+```
+```{r}
+boxplot.stats(total)$out
+```
+
+## Exploratory Data Analysis
+### Univariate analysis
+
+```{r}
+# We will determine the summary of every column
+
+summary(invoice)
+```
+
+
+```{r}
+summary(branch)
+
+
+```
+
+
+```{r}
+summary(ctype)
+
+```
+
+
+```{r}
+summary(gen)
+
+```
+
+
+```{r}
+summary(pline)
+
+```
+
+
+```{r}
+summary(price)
+
+```
+
+
+```{r}
+summary(quantity)
+
+```
+
+
+```{r}
+summary(tax)
+
+```
+
+
+```{r}
+summary(date)
+
+```
+
+
+```{r}
+summary(time)
+
+```
+
+
+```{r}
+summary(pay)
+
+```
+
+
+```{r}
+summary(cogs)
+
+```
+
+
+```{r}
+summary(gmp)
+
+
+```
+
+
+```{r}
+summary(income)
+
+```
+
+
+```{r}
+
+summary(rating)
+
+```
+
+
+```{r}
+summary(total)
+```
+
+
+```{r}
+# We will create a function (getmode) to calculate the mode of our numerical variables
+
+getmode <- function(v){
+  uniqv <- unique(v)
+  uniqv[which.max(tabulate(match(v ,uniqv)))]
+}
+
+```
+
+
+```{r}
+# Calculating the modes of our variables
+getmode(invoice)
+getmode(ctype)
+getmode(date)
+getmode(branch)
+getmode(gen)
+getmode(pline)
+getmode(price)
+getmode(quantity)
+getmode(tax)
+getmode(time)
+getmode(pay)  
+getmode(income)
+getmode(rating)
+getmode(total) 
+
+```
+
+```{r}
+#Spread of Rate
+plot(density(rating), main = 'Rate density spread')
+```
+```{r}
+
+#Spread of Rate
+plot(density(income), main = 'Gross Income density spread')
+```
+```{r}
+
+#Spread of Rate
+plot(density(total), main = 'Total density spread')
+```
+```{r}
+#Spread of Gross income
+plot(density(gmp), main = 'GMP density spread')
+```
+
+```{r}
+#Spread of tax
+plot(density(tax), main = 'Tax density spread')
+```
+```{r}
+#Spread of cogs
+plot(density(cogs), main = 'Cogs density spread')
+```
+### Bivariate and Multivariate Analysis
+
+```{r}
+boxplot(total~rating, col = c("grey", "red") , main ="total against Rate")
+```
+
+
+```{r}
+boxplot(price~quantity, col = c("blue", "orange") , main ="Price against Quantity")
+```
+
+```{r}
+boxplot(cogs~gmp, col = c("blue", "orange") , main ="Gmp against Cogs")
+
+```
+
+## Implementing the solution
+### Dimensionality Reduction
+
+```{r}
+## Previewing our data
+
+head(sale1)
+
+```
+
+```{r}
+
+## Checking the structure of our data
+
+str(sale1)
+```
+```{r}
+## Selecting our numerical columns
+
+head(sale1)
+
+df <- sale1[,c(6,7,8,12,14:16)]
+head(df)
+```
+```{r}
+#Check for SD, if any has Zero , remove it from the List of Numeric variables.
+sd(price)
+sd(quantity)
+sd(cogs)
+sd(gmp)
+sd(income)
+sd(rating)
+sd(total)
+
+# We will remove our Gross Margin Percentage as it has a standard deviation of 0
+```
+
+```{r}
+# We then pass df to the prcomp(). We also set two arguments, center and scale.
+
+df.pca <- prcomp(sale1[,c(6,7,8,12,14:16)], center = TRUE, scale. = TRUE)
+summary(df.pca)
+
+
+# As a result we obtain 7 principal components, 
+# each which explain a percentage of the total variation of the dataset
+# PC1 explains 70% of the total variance, which means that more than two thirds
+# of the information in the dataset can be represented by that component
+```
+```{r}
+
+# Calling str() to have a look at your PCA object
+# ---
+
+str(df.pca)
+
+# Here we note that our pca object: The center point ($center), scaling ($scale), 
+# standard deviation(sdev) of each principal component
+```
+```{r}
+# We will now plot our pca. 
+# ---
+
+ggbiplot(df.pca)
+
+# From the graph we will see that the variables Unit price, quantity and gross income contribute to PC1, 
+# with higher values in those variables moving the samples to the right on the plot.
+```
+
+```{r}
+## We will now cluster our data as per the number of components
+plot = ggbiplot(df.pca , obs.scale = 1 , var.scale = 1 ,ellipse = TRUE, circle = TRUE)
+
+plot1 = plot + scale_color_discrete(name = '') + theme(legend.direction = 'horizontal')
+plot1
+
+
+```
+### Feature Selection
+#### Fliter method
+
+We will use the find Correlation function included in the caret package to create a subset of variables. 
+This function would allows us to remove redundancy by correlation using the given dataset. 
+It would search through a correlation matrix and return a vector of integers corresponding to the columns, to remove or reduce pair-wise correlations.
+
+
+```{r}
+# Calculating the correlation matrix
+# ---
+#
+correlationMatrix <- cor(df)
+
+# Find attributes that are highly correlated
+# ---
+#
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.75)
+
+# Highly correlated attributes
+# ---
+# 
+highlyCorrelated
+
+names(df[,highlyCorrelated])
+
+
+```
+
+```{r}
+
+# Remove the variables with a higher correlation 
+# and comparing the results graphically as shown below
+# ---
+
+data <-df[-highlyCorrelated]
+
+# Performing our graphical comparison
+# ---
+# 
+par(mfrow = c(1, 2))
+corrplot(correlationMatrix, order = "hclust")
+corrplot(cor(data), order = "hclust")
+```
+
+
+
