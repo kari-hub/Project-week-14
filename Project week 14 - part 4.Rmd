@@ -1,0 +1,146 @@
+---
+title: "Project week 14- part 3"
+output: html_document
+---
+
+## 1. Define the Question
+
+This is will help us understand the task at hand, the dataset to be used and the metrics of Success.
+
+### a. Specifying the question.
+  Our project has been divided into four parts where we will explore a recent marketing dataset by performing various unsupervised learning techniques and later providing recommendations based on our insights. 
+ 
+### b. Define the Metrics of Success.
+Our metrics of success is to be able to do a conclusive Dimensionality reduction(Anomaly Detection) through the various methods.
+
+### c. Understand context
+The context is using data to do dimensionality reduction through Anomaly Detection and other ways to get meaningful insights and conclusions from advertising data.
+
+### d. Record the experiment design 
+This involves:
+a. Cleaning
+   i). Removing anomalies in the data
+  ii). Finding and dealing with missing data
+ iii). Dealing with duplicated rows in the data
+ 
+b. Exploratory Data Analysis
+   i). Univariate analysis
+  ii). Bivariate analysis
+ iii). Multivariate analysis 
+ 
+c. Anomaly detection
+  
+### e. Data relevance
+To establish if the data is relevant to the question and the objectives of the experiment.
+
+## Checking our data
+
+```{r}
+## Loading our libraries
+
+library(readr)
+```
+
+```{r}
+## Importing our data
+
+forecast <- read_csv("C:/Users/HP/Downloads/Supermarket_Sales_Forecasting - Sales.csv")
+
+
+```
+
+## 2. Read Data
+
+```{r}
+## Previewing the top of our dataset
+
+head(forecast)
+```
+
+```{r}
+## previewing the bottom of our data
+
+tail(forecast)
+
+```
+```{r}
+## Determining the shape of our data
+dim(forecast)
+
+```
+
+```{r}
+## Determining the summary of the data
+
+summary(forecast)
+```
+
+```{r}
+## Checking the column names
+
+colnames(forecast)
+
+
+```
+```{r}
+## Checking the class of our data
+
+class(forecast)
+
+```
+
+```{r}
+## Checking the structure of our data
+
+str(forecast)
+```
+## Tidying our data
+```{r}
+## Checking for null values
+
+colSums(is.na(forecast))  
+
+```
+```{r}
+## Checking for duplicate values
+
+Duplicate <- forecast[duplicated(forecast),]
+Duplicate
+
+```
+
+```{r}
+## Checking for outliers in our data
+
+boxplot(forecast$Sales)
+```
+```{r}
+boxplot(forecast$Sales)$out
+```
+
+
+
+```{r}
+## Loading the normalize and tidyverse libraries
+
+library(tidyverse)
+library(anomalize)
+
+```
+
+
+
+
+
+```{r}
+## Using the anomalize library to check for anomalies in our data
+
+tidyverse_cran_downloads %>%
+    time_decompose(count) %>%
+    anomalize(remainder) %>%
+    time_recompose() %>%
+    plot_anomalies(time_recomposed = TRUE, ncol = 3, alpha_dots = 0.5)
+
+
+```
+
