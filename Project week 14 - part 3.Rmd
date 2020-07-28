@@ -1,0 +1,309 @@
+---
+title: "Project week 14 -part 3"
+output: html_document
+---
+
+## 1. Define the Question
+
+This is will help us understand the task at hand, the dataset to be used and the metrics of Success.
+
+### a. Specifying the question.
+You are a Data analyst at Carrefour Kenya and are currently undertaking a project that will inform the marketing department on the most relevant marketing strategies that will result in the highest no. of sales (total price including tax). Your project has been divided into four parts where you'll explore a recent marketing dataset by performing various unsupervised learning techniques and later providing recommendations based on your insights.
+ 
+### b. Define the Metrics of Success.
+Our metrics of Success is to be able to do a conclusive association analysis through the various methods.
+
+### c. Understand context
+The context is using data to do association analysis using the arules library and other ways to get meaningful insights and conclusions from advertising data.
+
+### d. Record the experiment design 
+This involves:
+a. Cleaning
+   i). Removing anomalies in the data
+  ii). Finding and dealing with missing data
+ iii). Dealing with duplicated rows in the data
+ 
+b. Exploratory Data Analysis
+   i). Univariate analysis
+  ii). Bivariate analysis
+ iii). Multivariate analysis 
+ 
+c.  Association Rules
+  
+### e. Data relevance
+To establish if the data is relevant to the question and the objectives of the experiment.
+
+## 2. Read Data
+We start by importing the Data
+
+```{r}
+## Importing our libraries
+
+library(readr)
+```
+
+```{r}
+## Loading our dataset
+
+sale2 <- read.csv("C:/Users/HP/Downloads/Supermarket_Sales_Dataset II.csv")
+sale2
+
+```
+
+## Checking our data
+```{r}
+## Previewing the top of our data
+
+head(sale2)
+
+```
+
+```{r}
+## Previewing the bottom of our dataset
+tail(sale2)
+
+```
+
+```{r}
+## Determining the number of records in our data
+
+dim(sale2)
+```
+```{r}
+## Checking the summary of our data columns
+summary(sale2)
+
+```
+
+```{r}
+## Checking the structure of our data
+
+str(sale2)
+
+```
+
+```{r}
+## Checking the class of our data
+
+class(sale2)
+
+```
+
+```{r}
+## Identifying our column names
+
+colnames(sale2)
+```
+
+## Tidying our data
+```{r}
+
+## Checking for any null values
+
+colSums(is.na(sale2))
+
+
+```
+
+
+```{r}
+
+## Dropping the last column since it is filled with null values
+
+sale2 <- sale2[, c(-1)]
+dim(sale2)
+
+```
+
+
+```{r}
+## Checking for any duplicates
+
+Duplicated <- sale2[duplicated(sale2),]
+Duplicated
+
+```
+
+```{r}
+## Dropping our duplicated values
+ 
+sale2 <- unique(sale2)
+dim(sale2)
+
+```
+## Implementing the solution
+### Association Analysis
+```{r}
+# We first we install the required arules library 
+#
+install.packages("arules")
+
+```
+
+```{r}
+# Loading the arules library
+#
+library(arules)
+
+
+```
+
+```{r}
+
+# We will use read.transactions fuction which will load data from comma-separated files # and convert them to the class transactions
+sale2 <- "http://bit.ly/SupermarketDatasetII" 
+
+transaction <- read.transactions(sale2, sep = ",")
+transaction
+
+
+```
+
+```{r}
+# Verifying the object's class
+# ---
+# This should show us transactions as the type of data that we will need
+
+class(transaction)
+
+
+```
+
+```{r}
+# Previewing our first 5 transactions
+#
+inspect(transaction[1:5])
+
+
+```
+
+```{r}
+# Generating a summary of the transaction dataset
+
+summary(transaction)
+
+
+```
+
+
+```{r}
+
+# Exploring the frequency of some articles 
+# i.e. transacations ranging from 8 to 10 and performing 
+# some operation in percentage terms of the total transactions 
+# 
+itemFrequency(transaction[, 8:10],type = "absolute")
+round(itemFrequency(transaction[, 8:10],type = "relative")*100,2)
+
+```
+```{r}
+
+# Producing a chart of frequencies and fitering to consider only items with a minimum #percentage of support/ considering a top x of items
+# ---
+# Displaying top 10 most common items in the transactions dataset 
+# and the items whose relative importance is at least 10%
+# 
+par(mfrow = c(1, 2))
+
+# plot the frequency of items
+itemFrequencyPlot(transaction, topN = 10,col="darkblue")
+itemFrequencyPlot(transaction, support = 0.1,col="darkred")
+
+```
+
+```{r}
+# Building a model based on association rules using the apriori function 
+# ---
+# We use min Support as 0.001 and confidence as 0.8
+# ---
+# 
+rules <- apriori (transaction, parameter = list(supp = 0.001, conf = 0.8))
+rules
+
+```
+
+```{r}
+
+# We use measures of significance and interest on the rules, determining which ones are interesting and which to discard.
+
+# However since we built the model using 0.001 Min support 
+# and confidence as 0.8 we obtained 74 rules.
+# However, in order to illustrate the sensitivity of the model to these two parameters,
+# we will see what happens if we increase the support or lower the confidence level
+
+# Building a apriori model with Min Support as 0.002 and confidence as 0.8.
+rules2 <- apriori (transaction,parameter = list(supp = 0.002, conf = 0.8)) 
+
+# Building apriori model with Min Support as 0.002 and confidence as 0.6.
+rules3 <- apriori (transaction, parameter = list(supp = 0.001, conf = 0.6)) 
+
+rules2
+
+rules3
+
+```
+In our first example, we increased the minimum support of 0.001 to 0.002 and model rules went from 74 to only 2. This would lead us to understand that using a high level of support can make the model lose interesting rules. In the second example, we decreased the minimum confidence level to 0.6 and the number of model rules went from 74 to 545. This would mean that using a low confidence level increases the number of rules to quite an extent and many will not be useful.
+
+
+```{r}
+# We can perform an exploration of our model 
+# through the use of the summary function as shown
+
+summary(rules)
+```
+
+
+```{r}
+# Observing rules built in our model i.e. first 5 model rules
+# ---
+# 
+inspect(rules[1:5])
+
+```
+#### Interpretation of the first rule:
+#### ---
+If someone buys frozen smoothie and spinach, they are 88% likely to buy mineral water too
+
+```{r}
+# Ordering these rules by a criteria such as the level of confidence
+# then looking at the first five rules.
+
+rules<-sort(rules, by="confidence", decreasing=TRUE)
+inspect(rules[1:5])
+```
+#### Interpretation
+#### ---
+The given four rules have a confidence of 100
+```{r}
+
+# If we're interested in making a promotion relating to the sale of mineral water, 
+# we could create a subset of rules concerning these products 
+# ---
+# This would tell us the items that the customers bought before purchasing mineral water.
+# ---
+# 
+mwater <- subset(rules, subset = rhs %pin% "mineral water")
+ 
+# Then order by confidence
+mwater <- sort(mwater, by="confidence", decreasing=TRUE)
+inspect(mwater[1:5])
+
+```
+
+```{r}
+# What if we wanted to determine items that customers might buy 
+# who have previously bought mineral water?
+# ---
+# 
+# Subset the rules
+mwater <- subset(rules, subset = lhs %pin% "mineral water")
+
+# Order by confidence
+mwater <- sort(mwater, by="confidence", decreasing=TRUE)
+
+# inspect top 5
+inspect(mwater[10:14])
+
+
+```
+
